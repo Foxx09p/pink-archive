@@ -115,19 +115,19 @@
             <p style="opacity: 0.6;">Vercel Instance - Ported Gist</p>
         </div>
         <div id="game-view">
-            <div id="game-loader">BYPASSING FILTERS...</div>
+            <div id="game-loader">INJECTING RAW CODE...</div>
             <div class="game-header-btns">
                 <button class="circle-btn" onclick="toggleFullScreen()">⛶</button>
                 <button class="circle-btn" onclick="goHome()">✕</button>
             </div>
-            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock" allow="fullscreen"></iframe>
         </div>
     </main>
 
     <div id="connection-status">CHECKING CONNECTION...</div>
 
     <script>
-        // 1. YOUR RAW GIST URL GOES HERE
+        // 1. YOUR RAW GIST URL FOR THE GAMES LIST
         const GIST_URL = 'https://gist.githubusercontent.com/Foxx09p/8aec57b79cc19a212b6db1074739d493/raw/7fb4dc9778d083f0b63345ae858c8a1ecc205e9a/games.json';
         
         let allGames = [];
@@ -169,30 +169,19 @@
 
         async function loadGames() {
             const status = document.getElementById('connection-status');
-            
-            // Multiple ways to get your data if GitHub is blocked
-            const sources = [
-                GIST_URL + "?cb=" + Date.now(),
-                "https://api.allorigins.win/raw?url=" + encodeURIComponent(GIST_URL),
-                "https://corsproxy.io/?" + encodeURIComponent(GIST_URL)
-            ];
-
-            for (let url of sources) {
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        allGames = await res.json();
-                        renderGames();
-                        status.innerText = "ONLINE";
-                        status.style.color = "green";
-                        return;
-                    }
-                } catch(e) { 
-                    console.warn("Attempt failed, trying next proxy..."); 
+            try {
+                // Fetch the main JSON list
+                const res = await fetch(GIST_URL + "?cb=" + Date.now());
+                if (res.ok) {
+                    allGames = await res.json();
+                    renderGames();
+                    status.innerText = "ONLINE";
+                    status.style.color = "green";
                 }
+            } catch(e) { 
+                status.innerText = "OFFLINE (BLOCKED)";
+                status.style.color = "red";
             }
-            status.innerText = "OFFLINE (BLOCKED)";
-            status.style.color = "red";
         }
 
         function renderGames(filterList = null) {
@@ -204,7 +193,9 @@
             toRender.forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
-                card.innerHTML = `<span>${game.name}</span><button class="play-btn" onclick="playGame(${allGames.indexOf(game)})">Play</button>`;
+                // Using findIndex to ensure we get the correct index for the allGames array
+                const index = allGames.indexOf(game);
+                card.innerHTML = `<span>${game.name}</span><button class="play-btn" onclick="playGame(${index})">Play</button>`;
                 list.appendChild(card);
             });
         }
@@ -223,35 +214,47 @@
             document.getElementById('game-view').style.display = 'block';
             loader.style.display = 'block';
             
-            frame.removeAttribute('srcdoc');
-            frame.src = "";
-
-            // Proxy wrap the game URL to help bypass the "refused to connect" error
-            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(game.url);
+            // Reset frame content
+            frame.srcdoc = "";
+            frame.src = "about:blank";
 
             try {
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error();
-                const htmlCode = await response.text();
-                frame.srcdoc = htmlCode;
+                // Fetch the RAW HTML code from the URL provided in the JSON
+                const response = await fetch(game.url + "?cb=" + Date.now());
+                if (!response.ok) throw new Error("Fetch failed");
+                
+                const rawHtmlCode = await response.text();
+                
+                // Set the fetched code as the iframe source
+                frame.srcdoc = rawHtmlCode;
             } catch (err) {
-                frame.src = game.url;
+                console.error("Error loading raw HTML:", err);
+                frame.srcdoc = `<div style="color: #ff7da1; font-family: sans-serif; text-align: center; padding: 50px;">
+                    <h2>Load Failed</h2>
+                    <p>Could not fetch the raw code from the Gist.</p>
+                </div>`;
             } finally {
                 loader.style.display = 'none';
-                toggleSidebar();
+                // Close sidebar after clicking play
+                if (document.getElementById('sidebar').classList.contains('open')) {
+                    toggleSidebar();
+                }
             }
         }
 
         function goHome() {
             document.getElementById('game-view').style.display = 'none';
             document.getElementById('welcome-view').style.display = 'block';
-            document.getElementById('preview-frame').src = 'about:blank';
+            document.getElementById('preview-frame').srcdoc = '';
         }
 
         function toggleFullScreen() {
             const frame = document.getElementById('preview-frame');
-            if (!document.fullscreenElement) frame.requestFullscreen();
-            else document.exitFullscreen();
+            if (!document.fullscreenElement) {
+                if (frame.requestFullscreen) frame.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
         }
 
         window.onload = loadGames;
