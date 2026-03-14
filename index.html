@@ -3,80 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="tab-title">Pink Archive</title>
+    <title id="tab-title">PinkleTwinkle Library</title>
     <link id="tab-icon" rel="icon" href="https://raw.githubusercontent.com/google/material-design-icons/master/png/action/extension/res/mipmap-mdpi/ic_extension_black_24dp.png" type="image/x-icon">
 
     <style>
         :root {
             --bg-main: #fec1d3;
-            --sidebar-bg: #ffdbe6;
+            --sidebar-bg: rgba(255, 219, 230, 0.95);
             --accent: #ff7da1;
             --accent-hover: #ff5e8c;
             --text-main: #6d2a3d;
             --card-bg: #fff0f5;
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass: rgba(255, 255, 255, 0.4);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { 
+            background-color: var(--bg-main); 
+            background-image: radial-gradient(circle at 20% 30%, #ffd1df 0%, transparent 50%), 
+                              radial-gradient(circle at 80% 70%, #ffb1c8 0%, transparent 50%);
+            color: var(--text-main); 
+            overflow: hidden; 
+            height: 100vh;
+        }
 
         header {
-            padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
-            background: rgba(254, 193, 211, 0.9); backdrop-filter: blur(15px);
-            position: fixed; top: 0; width: 100%; z-index: 100; border-bottom: 3px solid white;
+            padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px);
+            position: fixed; top: 0; width: 100%; z-index: 100; border-bottom: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
 
         .header-left { display: flex; align-items: center; }
-        .menu-btn, .home-btn { background: none; border: none; color: var(--accent); font-size: 1.8rem; cursor: pointer; transition: var(--transition); }
+        .menu-btn, .home-btn { background: var(--glass); border: 1px solid white; color: var(--accent); width: 45px; height: 45px; border-radius: 12px; font-size: 1.2rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
+        .menu-btn:hover, .home-btn:hover { background: white; transform: translateY(-2px); }
         .home-btn { margin-left: 15px; }
 
         #sidebar {
-            position: fixed; left: -410px; top: 0; width: 400px; height: 100%;
-            background: var(--sidebar-bg); box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-            z-index: 2000; transition: left 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; flex-direction: column; border-right: 4px solid white;
+            position: fixed; left: -420px; top: 0; width: 400px; height: 100%;
+            background: var(--sidebar-bg); backdrop-filter: blur(25px);
+            box-shadow: 15px 0 50px rgba(0,0,0,0.1);
+            z-index: 2000; transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; border-right: 2px solid rgba(255,255,255,0.6);
         }
         #sidebar.open { left: 0; }
-        .sidebar-header { padding: 25px 25px 10px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header { padding: 30px 25px 15px 25px; display: flex; justify-content: space-between; align-items: center; }
         
-        .sidebar-tabs { display: flex; padding: 0 25px; gap: 5px; border-bottom: 2px solid white; }
-        .tab-link { padding: 10px; cursor: pointer; font-weight: bold; font-size: 0.85rem; color: var(--accent); opacity: 0.6; }
-        .tab-link.active { opacity: 1; border-bottom: 3px solid var(--accent); }
+        .sidebar-tabs { display: flex; padding: 0 20px; gap: 10px; margin-bottom: 20px; }
+        .tab-link { 
+            flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 600; 
+            font-size: 0.85rem; color: var(--text-main); opacity: 0.5; transition: var(--transition);
+            border-radius: 10px; background: rgba(255,255,255,0.3);
+        }
+        .tab-link.active { opacity: 1; background: white; color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        .sidebar-content { flex: 1; overflow-y: auto; display: none; padding: 20px; }
-        .sidebar-content.active { display: block; }
+        .sidebar-content { flex: 1; overflow-y: auto; display: none; padding: 0 25px 25px 25px; scrollbar-width: none; }
+        .sidebar-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-        .folder-bar { display: flex; overflow-x: auto; padding: 10px 0; gap: 10px; margin-bottom: 10px; white-space: nowrap; }
-        .folder { display: inline-flex; min-width: 40px; height: 40px; border-radius: 10px; background: white; color: var(--accent); align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: var(--transition); flex-shrink: 0; }
-        .folder.active { background: var(--accent); color: white; transform: translateY(-3px); }
+        .section-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; color: var(--accent); margin: 15px 0 10px 5px; text-transform: uppercase; }
 
-        .custom-input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid white; outline: none; margin-bottom: 10px; background: white; color: var(--text-main); }
-        .game-card { background: var(--card-bg); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 2px solid white; }
+        .custom-input, .code-area { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid transparent; outline: none; 
+            margin-bottom: 12px; background: white; color: var(--text-main); transition: var(--transition);
+        }
+        .code-area { height: 200px; font-family: 'Consolas', monospace; font-size: 0.8rem; resize: none; }
         
-        .play-btn { background: var(--accent); border: none; color: white; padding: 8px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: var(--transition); }
-        .play-btn:hover { background: var(--accent-hover); }
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .preset-card { 
+            background: white; padding: 12px; border-radius: 12px; display: flex; align-items: center; 
+            gap: 10px; cursor: pointer; transition: var(--transition); border: 2px solid transparent;
+        }
+        .preset-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .preset-card img { width: 24px; height: 24px; border-radius: 4px; }
+        .preset-card span { font-size: 0.8rem; font-weight: 600; }
+
+        .game-card { 
+            background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            transition: var(--transition); border: 1px solid rgba(255,255,255,0.5);
+        }
+        
+        .action-btn { 
+            background: var(--accent); border: none; color: white; padding: 10px 20px; 
+            border-radius: 12px; cursor: pointer; font-weight: bold; transition: var(--transition); 
+        }
+        .action-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .action-btn.success { background: #4CAF50 !important; }
+
+        .folder-bar { display: flex; overflow-x: auto; padding: 5px 0 15px 0; gap: 8px; margin-bottom: 5px; }
+        .folder { 
+            min-width: 38px; height: 38px; border-radius: 10px; background: white; color: var(--accent); 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            font-weight: bold; transition: var(--transition); font-size: 0.8rem;
+        }
+        .folder.active { background: var(--accent); color: white; }
 
         .main-container { height: 100vh; padding-top: 80px; display: flex; align-items: center; justify-content: center; }
         #welcome-view { text-align: center; }
-        #game-view { width: 92%; max-width: 1100px; height: 75vh; background: white; border-radius: 25px; position: relative; border: 5px solid white; display: none; }
-        #preview-frame { width: 100%; height: 100%; border: none; border-radius: 20px; background: white; }
+        #game-view { width: 94%; height: 80vh; background: white; border-radius: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15); display: none; overflow: hidden; }
+        #preview-frame { width: 100%; height: 100%; border: none; background: white; }
         
-        .game-header-btns { position: absolute; top: -20px; right: 10px; display: flex; gap: 10px; z-index: 10; }
-        .circle-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--accent); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .game-header-btns { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 10; opacity: 0.3; transition: 0.3s; }
+        .game-header-btns:hover { opacity: 1; }
+        .circle-btn { width: 35px; height: 35px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: white; cursor: pointer; backdrop-filter: blur(5px); }
 
-        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 1500; }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(109, 42, 61, 0.2); backdrop-filter: blur(4px); z-index: 1500; }
         #overlay.active { display: block; }
-        #game-loader { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--accent); font-weight: bold; }
-        
-        #connection-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; padding: 5px 10px; border-radius: 20px; background: rgba(255,255,255,0.5); font-weight: bold; }
+
+        #secret-trigger { 
+            position: fixed; bottom: 12px; right: 12px; opacity: 0.15; cursor: pointer; 
+            font-size: 14px; color: #ffffff; z-index: 5000; display: none; 
+            text-shadow: 0 0 5px var(--accent); transition: opacity 0.3s;
+        }
+        #secret-trigger:hover { opacity: 0.6; }
+        #secret-message {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 25px; border-radius: 20px; border: 2px solid var(--accent);
+            box-shadow: 0 0 40px rgba(255, 125, 161, 0.3); z-index: 6000; text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="header-left">
-            <button class="menu-btn" onclick="toggleSidebar()">✿</button>
-            <h2 style="letter-spacing: 2px; color: var(--accent); font-weight: 300;">PINK<span style="font-weight: 800;">ARCHIVE</span></h2>
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <h2 style="letter-spacing: 3px; color: var(--accent); font-weight: 300; margin-left: 20px;">P.T.<span style="font-weight: 900;">LIBRARY</span></h2>
         </div>
         <button class="home-btn" onclick="goHome()">🏠</button>
     </header>
@@ -85,53 +138,79 @@
 
     <aside id="sidebar">
         <div class="sidebar-header">
-            <h3 style="color: var(--accent); font-weight: 400; letter-spacing: 1px;">CATALOG</h3>
-            <button class="play-btn" style="padding: 5px 10px;" onclick="toggleSidebar()">✕</button>
+            <h3 style="color: var(--accent); font-weight: 800; letter-spacing: 2px; font-size: 1.2rem;">EXPLORE</h3>
+            <button class="menu-btn" style="width: 35px; height: 35px; font-size: 0.9rem;" onclick="toggleSidebar()">✕</button>
         </div>
 
         <div class="sidebar-tabs">
-            <div class="tab-link active" onclick="switchTab('games', this)">Games</div>
+            <div class="tab-link active" onclick="switchTab('games', this)">Archive</div>
+            <div class="tab-link" onclick="switchTab('sandbox', this)">Sandbox</div>
             <div class="tab-link" onclick="switchTab('disguise', this)">Disguise</div>
         </div>
 
         <div id="games-tab" class="sidebar-content active">
             <input type="text" id="game-search" class="custom-input" placeholder="Search archive..." onkeyup="searchGames()">
+            <div class="section-label">Browse by Letter</div>
             <div class="folder-bar" id="folder-bar"></div>
             <div id="game-list"></div>
         </div>
 
+        <div id="sandbox-tab" class="sidebar-content">
+            <div class="section-label">Code Execution</div>
+            <textarea id="sandbox-code" class="code-area" placeholder="Paste your HTML code here..."></textarea>
+            <button class="action-btn" style="width:100%; margin-top: 10px; padding: 15px;" onclick="executeCode()">Launch Application</button>
+        </div>
+
         <div id="disguise-tab" class="sidebar-content">
-            <label style="font-size: 0.8rem; font-weight: bold; color: var(--accent);">TAB NAME</label>
-            <input type="text" id="manual-name" class="custom-input" placeholder="e.g. My Drive">
-            <label style="font-size: 0.8rem; font-weight: bold; color: var(--accent);">FAVICON URL</label>
-            <input type="text" id="manual-icon" class="custom-input" placeholder="Paste image URL here...">
-            <button class="play-btn" style="width:100%" onclick="applyManualDisguise()">Apply Changes</button>
+            <div class="section-label">Quick Presets</div>
+            <div class="preset-grid">
+                <div class="preset-card" onclick="setPreset('Google', 'https://www.google.com/favicon.ico', true)">
+                    <img src="https://www.google.com/favicon.ico" alt=""> <span>Google</span>
+                </div>
+                <div class="preset-card" onclick="setPreset('Google Classroom', 'https://ssl.gstatic.com/classroom/favicon.png')">
+                    <img src="https://ssl.gstatic.com/classroom/favicon.png" alt=""> <span>Classroom</span>
+                </div>
+                <div class="preset-card" onclick="setPreset('My Drive - Google Drive', 'https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png')">
+                    <img src="https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png" alt=""> <span>Drive</span>
+                </div>
+                <div class="preset-card" onclick="setPreset('Dashboard', 'https://instructure-uploads.s3.amazonaws.com/account_142000000000000001/attachments/637/canvas_favicon.ico')">
+                    <img src="https://instructure-uploads.s3.amazonaws.com/account_142000000000000001/attachments/637/canvas_favicon.ico" alt=""> <span>Canvas</span>
+                </div>
+            </div>
+
+            <div class="section-label">Manual Customization</div>
+            <input type="text" id="manual-name" class="custom-input" placeholder="Tab Name">
+            <input type="text" id="manual-icon" class="custom-input" placeholder="Favicon URL">
+            <button class="action-btn" style="width:100%" onclick="applyManualDisguise()">Update Identity</button>
         </div>
     </aside>
 
     <main class="main-container">
         <div id="welcome-view">
-            <h1 style="font-size: 3.5rem; color: var(--accent); font-weight: 800; letter-spacing: 2px;">PINKARCHIVE</h1>
-            <p style="opacity: 0.6;">Vercel Instance - Ported Gist</p>
+            <h1 style="font-size: 4.5rem; color: white; font-weight: 900; letter-spacing: -2px; text-shadow: 0 10px 30px rgba(255,125,161,0.4);">P.T. LIBRARY</h1>
+            <p style="opacity: 0.8; font-weight: 500; margin-top: -10px;">The largest unblocked free game library, all in one place!!</p>
         </div>
         <div id="game-view">
-            <div id="game-loader">INJECTING RAW CODE...</div>
             <div class="game-header-btns">
                 <button class="circle-btn" onclick="toggleFullScreen()">⛶</button>
                 <button class="circle-btn" onclick="goHome()">✕</button>
             </div>
-            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock" allow="fullscreen"></iframe>
+            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
     </main>
 
-    <div id="connection-status">CHECKING CONNECTION...</div>
+    <div id="secret-trigger" onclick="revealSecret()">❤</div>
+    
+    <div id="secret-message" onclick="this.style.display='none'">
+        <p style="font-size: 11px; color: #ff7da1; font-weight: bold; letter-spacing: 1px;">i love you ellie</p>
+    </div>
 
     <script>
-        // 1. YOUR RAW GIST URL FOR THE GAMES LIST
-        const GIST_URL = 'https://gist.githubusercontent.com/Foxx09p/8aec57b79cc19a212b6db1074739d493/raw/7fb4dc9778d083f0b63345ae858c8a1ecc205e9a/games.json';
+        const GIST_URL = 'https://gist.githubusercontent.com/Foxx09p/8aec57b79cc19a212b6db1074739d493/raw/4e9f0d1b8831059cea972617c11405559f99446c/games.json';
         
         let allGames = [];
         let currentFilter = '0-9';
+        let secretCounter = 0;
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -145,11 +224,133 @@
             document.getElementById(tab + '-tab').classList.add('active');
         }
 
+        function setPreset(name, icon, isGoogle = false) {
+            document.title = name;
+            document.getElementById('tab-icon').href = icon;
+            
+            if(isGoogle) {
+                secretCounter++;
+                if(secretCounter === 3) {
+                    document.getElementById('secret-trigger').style.display = 'block';
+                }
+            } else {
+                secretCounter = 0;
+            }
+
+            const btn = event.currentTarget;
+            btn.style.borderColor = "#4CAF50";
+            setTimeout(() => btn.style.borderColor = "transparent", 1000);
+        }
+
+        function revealSecret() {
+            document.getElementById('secret-message').style.display = 'block';
+            document.getElementById('secret-trigger').style.display = 'none';
+            secretCounter = 0;
+        }
+
+        async function fetchAndCopy(btn, url) {
+            const originalText = btn.innerText;
+            btn.innerText = "Fetching...";
+            
+            // Primary Proxy
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                const code = await response.text();
+                await navigator.clipboard.writeText(code);
+                btn.innerText = "Copied!";
+                btn.classList.add('success');
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('success');
+                }, 2000);
+            } catch (err) {
+                // Fallback direct attempt
+                try {
+                    const response = await fetch(url);
+                    const code = await response.text();
+                    await navigator.clipboard.writeText(code);
+                    btn.innerText = "Copied!";
+                } catch(e) {
+                    btn.innerText = "Error";
+                    setTimeout(() => btn.innerText = originalText, 2000);
+                }
+            }
+        }
+
+        function executeCode() {
+            const code = document.getElementById('sandbox-code').value;
+            if (!code) return;
+            const frame = document.getElementById('preview-frame');
+            document.getElementById('welcome-view').style.display = 'none';
+            document.getElementById('game-view').style.display = 'block';
+            frame.srcdoc = code;
+            toggleSidebar();
+        }
+
+        async function loadGames() {
+            // First attempt with AllOrigins proxy
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(GIST_URL)}`;
+            
+            try {
+                const res = await fetch(proxyUrl);
+                const data = await res.json();
+                // AllOrigins returns the content inside a "contents" string
+                allGames = JSON.parse(data.contents);
+                renderGames();
+            } catch(e) { 
+                console.log("Proxy failed, trying direct...");
+                try {
+                    const res = await fetch(GIST_URL);
+                    allGames = await res.json();
+                    renderGames();
+                } catch(err) {
+                    document.getElementById('game-list').innerHTML = '<p style="text-align:center; padding:20px; font-size:0.8rem; opacity:0.6;">Network Error: Library couldn\'t load.</p>';
+                }
+            }
+        }
+
+        function renderGames(filterList = null) {
+            const list = document.getElementById('game-list');
+            if(!list) return;
+            list.innerHTML = '';
+            const toRender = filterList || allGames.filter(g => 
+                currentFilter === '0-9' ? /^\d/.test(g.name) : g.name.toUpperCase().startsWith(currentFilter)
+            );
+            toRender.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <span style="font-weight:600; font-size:0.9rem;">${game.name}</span>
+                    <button class="action-btn" onclick="fetchAndCopy(this, '${game.url}')">Copy</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
         function applyManualDisguise() {
             const name = document.getElementById('manual-name').value;
             const icon = document.getElementById('manual-icon').value;
             if (name) document.title = name;
             if (icon) document.getElementById('tab-icon').href = icon;
+        }
+
+        function searchGames() {
+            const q = document.getElementById('game-search').value.toLowerCase();
+            renderGames(allGames.filter(g => g.name.toLowerCase().includes(q)));
+        }
+
+        function goHome() {
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('welcome-view').style.display = 'block';
+            document.getElementById('preview-frame').srcdoc = '';
+        }
+
+        function toggleFullScreen() {
+            const frame = document.getElementById('preview-frame');
+            if (!document.fullscreenElement) frame.requestFullscreen();
+            else document.exitFullscreen();
         }
 
         const alphabet = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
@@ -166,96 +367,6 @@
             };
             fBar.appendChild(f);
         });
-
-        async function loadGames() {
-            const status = document.getElementById('connection-status');
-            try {
-                // Fetch the main JSON list
-                const res = await fetch(GIST_URL + "?cb=" + Date.now());
-                if (res.ok) {
-                    allGames = await res.json();
-                    renderGames();
-                    status.innerText = "ONLINE";
-                    status.style.color = "green";
-                }
-            } catch(e) { 
-                status.innerText = "OFFLINE (BLOCKED)";
-                status.style.color = "red";
-            }
-        }
-
-        function renderGames(filterList = null) {
-            const list = document.getElementById('game-list');
-            list.innerHTML = '';
-            const toRender = filterList || allGames.filter(g => 
-                currentFilter === '0-9' ? /^\d/.test(g.name) : g.name.toUpperCase().startsWith(currentFilter)
-            );
-            toRender.forEach(game => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                // Using findIndex to ensure we get the correct index for the allGames array
-                const index = allGames.indexOf(game);
-                card.innerHTML = `<span>${game.name}</span><button class="play-btn" onclick="playGame(${index})">Play</button>`;
-                list.appendChild(card);
-            });
-        }
-
-        function searchGames() {
-            const q = document.getElementById('game-search').value.toLowerCase();
-            renderGames(allGames.filter(g => g.name.toLowerCase().includes(q)));
-        }
-
-        async function playGame(i) {
-            const loader = document.getElementById('game-loader');
-            const frame = document.getElementById('preview-frame');
-            const game = allGames[i];
-            
-            document.getElementById('welcome-view').style.display = 'none';
-            document.getElementById('game-view').style.display = 'block';
-            loader.style.display = 'block';
-            
-            // Reset frame content
-            frame.srcdoc = "";
-            frame.src = "about:blank";
-
-            try {
-                // Fetch the RAW HTML code from the URL provided in the JSON
-                const response = await fetch(game.url + "?cb=" + Date.now());
-                if (!response.ok) throw new Error("Fetch failed");
-                
-                const rawHtmlCode = await response.text();
-                
-                // Set the fetched code as the iframe source
-                frame.srcdoc = rawHtmlCode;
-            } catch (err) {
-                console.error("Error loading raw HTML:", err);
-                frame.srcdoc = `<div style="color: #ff7da1; font-family: sans-serif; text-align: center; padding: 50px;">
-                    <h2>Load Failed</h2>
-                    <p>Could not fetch the raw code from the Gist.</p>
-                </div>`;
-            } finally {
-                loader.style.display = 'none';
-                // Close sidebar after clicking play
-                if (document.getElementById('sidebar').classList.contains('open')) {
-                    toggleSidebar();
-                }
-            }
-        }
-
-        function goHome() {
-            document.getElementById('game-view').style.display = 'none';
-            document.getElementById('welcome-view').style.display = 'block';
-            document.getElementById('preview-frame').srcdoc = '';
-        }
-
-        function toggleFullScreen() {
-            const frame = document.getElementById('preview-frame');
-            if (!document.fullscreenElement) {
-                if (frame.requestFullscreen) frame.requestFullscreen();
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-            }
-        }
 
         window.onload = loadGames;
     </script>
