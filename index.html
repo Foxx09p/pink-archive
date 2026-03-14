@@ -67,6 +67,8 @@
         #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 1500; }
         #overlay.active { display: block; }
         #game-loader { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--accent); font-weight: bold; }
+        
+        #connection-status { position: fixed; bottom: 10px; right: 10px; font-size: 10px; padding: 5px 10px; border-radius: 20px; background: rgba(255,255,255,0.5); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -100,7 +102,7 @@
 
         <div id="disguise-tab" class="sidebar-content">
             <label style="font-size: 0.8rem; font-weight: bold; color: var(--accent);">TAB NAME</label>
-            <input type="text" id="manual-name" class="custom-input" placeholder="e.g. Google Docs">
+            <input type="text" id="manual-name" class="custom-input" placeholder="e.g. My Drive">
             <label style="font-size: 0.8rem; font-weight: bold; color: var(--accent);">FAVICON URL</label>
             <input type="text" id="manual-icon" class="custom-input" placeholder="Paste image URL here...">
             <button class="play-btn" style="width:100%" onclick="applyManualDisguise()">Apply Changes</button>
@@ -110,7 +112,7 @@
     <main class="main-container">
         <div id="welcome-view">
             <h1 style="font-size: 3.5rem; color: var(--accent); font-weight: 800; letter-spacing: 2px;">PINKARCHIVE</h1>
-            <p style="opacity: 0.6;">Vercel Instance Active</p>
+            <p style="opacity: 0.6;">Vercel Instance - Ported Gist</p>
         </div>
         <div id="game-view">
             <div id="game-loader">BYPASSING FILTERS...</div>
@@ -122,13 +124,15 @@
         </div>
     </main>
 
+    <div id="connection-status">CHECKING CONNECTION...</div>
+
     <script>
-        // --- CONFIG ---
+        // 1. YOUR RAW GIST URL GOES HERE
         const GIST_URL = 'https://gist.githubusercontent.com/Foxx09p/8aec57b79cc19a212b6db1074739d493/raw/7fb4dc9778d083f0b63345ae858c8a1ecc205e9a/games.json';
+        
         let allGames = [];
         let currentFilter = '0-9';
 
-        // --- CORE FUNCTIONS ---
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('active');
@@ -145,9 +149,7 @@
             const name = document.getElementById('manual-name').value;
             const icon = document.getElementById('manual-icon').value;
             if (name) document.title = name;
-            if (icon) {
-                document.getElementById('tab-icon').href = icon;
-            }
+            if (icon) document.getElementById('tab-icon').href = icon;
         }
 
         const alphabet = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
@@ -166,7 +168,9 @@
         });
 
         async function loadGames() {
-            // Triple-fetch logic to ensure the Gist is reached
+            const status = document.getElementById('connection-status');
+            
+            // Multiple ways to get your data if GitHub is blocked
             const sources = [
                 GIST_URL + "?cb=" + Date.now(),
                 "https://api.allorigins.win/raw?url=" + encodeURIComponent(GIST_URL),
@@ -179,10 +183,16 @@
                     if (res.ok) {
                         allGames = await res.json();
                         renderGames();
+                        status.innerText = "ONLINE";
+                        status.style.color = "green";
                         return;
                     }
-                } catch(e) { console.warn("Trying next source..."); }
+                } catch(e) { 
+                    console.warn("Attempt failed, trying next proxy..."); 
+                }
             }
+            status.innerText = "OFFLINE (BLOCKED)";
+            status.style.color = "red";
         }
 
         function renderGames(filterList = null) {
@@ -216,7 +226,7 @@
             frame.removeAttribute('srcdoc');
             frame.src = "";
 
-            // Proxy wrap the game URL to help bypass network blocks
+            // Proxy wrap the game URL to help bypass the "refused to connect" error
             const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(game.url);
 
             try {
